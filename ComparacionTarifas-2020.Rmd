@@ -11,6 +11,8 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, 
                       fig.width=3.7, fig.height=3.7)
 ```
+
+
 ```{r}
 library(devtools)
 if (!require(anaStatsUEB)) install_github("uebvhir/anaStatsUEB")
@@ -113,7 +115,7 @@ allTarifas <- data.frame(Centro =rep(compTarifas_short$ID_centro,3),
 
 ```{r}
 library("PerformanceAnalytics")
-compTarifas_num <- compTarifas_short[, c("Interna", "Publica", "Privada")]
+compTarifas_num <- compTarifas_short[, c("interna", "publica", "privada")]
 chart.Correlation(compTarifas_num, histogram=TRUE, pch=19)
 ```
 
