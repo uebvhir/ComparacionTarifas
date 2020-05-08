@@ -1,0 +1,121 @@
+---
+title: "Comparacion de Tarifas de Unidades de Bioinformatica/Bioestadistica"
+author: "Alex Sanchez"
+date: "8/5/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, 
+                      fig.width=3.7, fig.height=3.7)
+```
+```{r}
+library(devtools)
+if (!require(anaStatsUEB)) install_github("uebvhir/anaStatsUEB")
+if (!require(mmotaF))install_github("miriammota/mmotaF")
+if (!require(PerformanceAnalytics)) install.packages("PerformanceAnalytics")
+```
+
+
+# Introducción
+
+Este documento presenta una primera aproximación a una comparación de tarifas de unidades de bioinformática y bioestadística.
+
+Esta comparativa se inició en Barcelona, en el Vall d'Hebrón Institut de Recerca (VHIR) y se ha ido extendiendo -bajo el impulso de TransBionet- a otros centros catalanes y españoles, lo que explica el reparto desigual entre comunidades. 
+La muestra de unidades no es aleatoria sino oportunista: se ha recogido los datos a los que se ha tenido acceso. Ahora bien, como el número total de unidades no es muy alto es probable que se pueda considerar relativamente representativa.
+
+En esta primera aproximación nos limitaremos a explorar la tabla de datos recogida con el objetivo de responder dos preguntas.
+
+- En base a qué criterios se facturan los servicios
+- Cuianto se cobra por los servicios de las unidades según si los clientes son "internos", "públicos" o "privados", clasificación adoptada por la mayoría de las unidades.
+
+
+# Los datos
+
+Los datos para el análisis se encuentran en una hoja de `googlesheets` a la que se puede acceder y modificar por su enlace por lo que, de momento se trabajará con una versión descargada del sitio.
+
+```{r}
+library(readxl)
+compTarifas <- read_excel("datos/Comparativa de tarifas entre unidades.xlsx")
+```
+
+
+```{r}
+library(anaStatsUEB)
+library(mmotaF)
+```
+
+Nos quedamos con el subconjunto a analizar
+
+```{r}
+library(dplyr)
+compTarifas_short <- as.data.frame(select(compTarifas, ID_centro, LOC, Tipo, TransBioNet, Criterio,"Cartera Servicios", Pers., Interna, Publica, Privada))
+desc_data(compTarifas_short)
+```
+
+Recodificamos las variables carácter a factores
+
+
+```{r}
+var2fac <- names(which(sapply(compTarifas_short, is.character))) [-1]
+compTarifas_short[,var2fac] <- lapply(compTarifas_short[,var2fac] , factor) 
+```
+
+Limpiamos los datos para eliminar errores (e.g SI y Si como respuestas)
+
+```{r}
+compTarifas_short <- janitor::clean_names(compTarifas_short) 
+```
+
+```{r eval=FALSE}
+compTarifas_short$"Cartera Servicios"[ grep("SI|Si", compTarifas_short$"Cartera Servicios")] <- "Sí" 
+compTarifas_short$"Cartera Servicios"<- factor_ueb(compTarifas_short$"Cartera Servicios") 
+compTarifas_short$"TransBioNet"[ grep("SI|Si", compTarifas_short$"TransBioNet")] <- "Sí" 
+compTarifas_short$"TransBioNet"<- factor_ueb(compTarifas_short$"TransBioNet") 
+```
+
+
+# Resumen de los datos
+
+## Resumenes numericos
+
+Un rápido resumen de algunas de las variables:
+
+```{r}
+library(anaStatsUEB)
+library(mmotaF)
+dscgroup<- desc_group (covariates = names(compTarifas_short), data = compTarifas_short)
+dscgroup$results
+```
+
+## Visualizaciones gráficas sencillas
+
+```{r}
+desc_plot(compTarifas_short, las=2, cex.lab=0.7, rowcol=c(1,1))
+```
+
+## Visualizando las tarifas
+
+```{r eval=FALSE}
+N=nrow(compTarifas_short)
+allTarifas <- data.frame(Centro =rep(compTarifas_short$ID_centro,3), 
+                         Tarifa = c(compTarifas_short$Interna, 
+                                  compTarifas_short$Publica,
+                                  compTarifas_short$Privada),
+                          Tipo = c(rep ("INT", N), rep("PUB", N), rep("PRIV", N))
+)
+```
+
+
+## Correlaciones
+
+```{r}
+library("PerformanceAnalytics")
+compTarifas_num <- compTarifas_short[, c("Interna", "Publica", "Privada")]
+chart.Correlation(compTarifas_num, histogram=TRUE, pch=19)
+```
+
+
+
