@@ -72,10 +72,10 @@ compTarifas_short <- janitor::clean_names(compTarifas_short)
 ```
 
 ```{r eval=FALSE}
-compTarifas_short$"Cartera Servicios"[ grep("SI|Si", compTarifas_short$"Cartera Servicios")] <- "Sí" 
-compTarifas_short$"Cartera Servicios"<- factor_ueb(compTarifas_short$"Cartera Servicios") 
-compTarifas_short$"TransBioNet"[ grep("SI|Si", compTarifas_short$"TransBioNet")] <- "Sí" 
-compTarifas_short$"TransBioNet"<- factor_ueb(compTarifas_short$"TransBioNet") 
+compTarifas_short$cartera_servicios[ grep("SI|Si", compTarifas_short$cartera_servicios)] <- "Sí" 
+compTarifas_short$cartera_servicios<- factor_ueb(compTarifas_short$cartera_servicios) 
+compTarifas_short$trans_bio_net[ grep("SI|Si", compTarifas_short$trans_bio_net)] <- "Sí" 
+compTarifas_short$trans_bio_net<- factor_ueb(compTarifas_short$trans_bio_net) 
 ```
 
 
@@ -106,7 +106,7 @@ allTarifas <- data.frame(Centro =rep(compTarifas_short$id_centro,3),
                            Tarifa = c(compTarifas_short$interna, 
                                   compTarifas_short$publica,
                                   compTarifas_short$privada),
-                          Tipo = c(rep ("INT", N), rep("PUB", N), rep("PRIV", N))
+                          Tipo = factor(c(rep ("INT", N), rep("PUB", N), rep("PRIV", N)))
 )
 
 allTarifas$Tipo <- factor_ueb(allTarifas$Tipo,labs = c("INT","PUB","PRIV"))
