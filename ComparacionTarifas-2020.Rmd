@@ -1,7 +1,7 @@
 ---
 title: "Comparacion de Tarifas de Unidades de Bioinformatica/Bioestadistica"
 author: "Alex Sanchez"
-date: "8/5/2020"
+date: "10/07/2020"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -40,7 +40,9 @@ Los datos para el análisis se encuentran en una hoja de `googlesheets` a la que
 
 ```{r}
 library(readxl)
-compTarifas <- read_excel("datos/Comparativa de tarifas entre unidades.xlsx")
+#compTarifas <- read_excel("datos/Comparativa de tarifas entre unidades.xlsx")
+compTarifas <- read_excel("datos/Comparativa de tarifas entre unidades-20200710.xlsx")
+
 ```
 
 
@@ -53,7 +55,7 @@ Nos quedamos con el subconjunto a analizar
 
 ```{r}
 library(dplyr)
-compTarifas_short <- as.data.frame(select(compTarifas, ID_centro, LOC, Tipo, TransBioNet, Criterio,"Cartera Servicios", Pers., Interna, Publica, Privada))
+compTarifas_short <- as.data.frame(select(compTarifas, ID_centro, LOC, Tipo, TransBioNet, Criterio, Pers., Interna, Publica, Privada))
 desc_data(compTarifas_short)
 ```
 
