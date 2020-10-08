@@ -40,7 +40,7 @@ Los datos para el análisis se encuentran en una hoja de `googlesheets` a la que
 ```{r}
 library(readxl)
 #compTarifas <- read_excel("datos/Comparativa de tarifas entre unidades.xlsx")
-compTarifas <- read_excel("datos/Comparativa de tarifas entre unidades-20201008.xlsx")
+compTarifas <- read_excel("datos/Comparativa de tarifas entre unidades-20201008_2.xlsx")
 ```
 
 El código para el análisis se encuentra disponible en github en la dirección: [https://github.com/uebvhir/ComparacionTarifas](https://github.com/uebvhir/ComparacionTarifas)
@@ -96,12 +96,12 @@ dscgroup$results
 ## Visualizaciones gráficas sencillas
 
 ```{r}
-desc_plot(compTarifas_short, las=2, cex.lab=0.7, rowcol=c(1,1))
+desc_plot(compTarifas_short[,!names(compTarifas_short) %in% "criterio"], las=2, cex.lab=0.7, rowcol=c(1,1))
 ```
 
 ## Visualizando las tarifas
 
-```{r eval=TRUE, fig.height = 7, fig.width = 7 } 
+```{r eval=TRUE, fig.height = 7, fig.width = 9} 
 N=nrow(compTarifas_short)
 allTarifas <- data.frame(Centro =rep(compTarifas_short$id_centro,3), 
                            Tarifa = c(compTarifas_short$interna, 
@@ -115,7 +115,8 @@ boxplot_bw(y = "Tarifa", group = "Tipo",dat = allTarifas)
 
 
 ggplot(na.omit(allTarifas), aes(x=Centro, y=Tarifa, fill=Tipo)) +
-    geom_bar(stat='identity', position='dodge')
+    geom_bar(stat='identity', position='dodge') + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
 
 # 
 # ggplot(allTarifas, aes(Tipo, Tarifa, group=Centro, color = Centro)) +
