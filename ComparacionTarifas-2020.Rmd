@@ -1,7 +1,7 @@
 ---
 title: "Comparacion de Tarifas de Unidades de Bioinformatica/Bioestadistica"
-author: "Alex Sanchez"
-date: "10/07/2020"
+author: "Alex Sanchez y Miriam Mota"
+date: ""
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -20,7 +20,6 @@ if (!require(mmotaF))install_github("miriammota/mmotaF")
 if (!require(PerformanceAnalytics)) install.packages("PerformanceAnalytics")
 ```
 
-
 # Introducción
 
 Este documento presenta una primera aproximación a una comparación de tarifas de unidades de bioinformática y bioestadística.
@@ -31,20 +30,24 @@ La muestra de unidades no es aleatoria sino oportunista: se ha recogido los dato
 En esta primera aproximación nos limitaremos a explorar la tabla de datos recogida con el objetivo de responder dos preguntas.
 
 - En base a qué criterios se facturan los servicios
-- Cuianto se cobra por los servicios de las unidades según si los clientes son "internos", "públicos" o "privados", clasificación adoptada por la mayoría de las unidades.
+- Cuanto se cobra por los servicios de las unidades según si los clientes son "internos", "públicos" o "privados", clasificación adoptada por la mayoría de las unidades.
 
 
-# Los datos
+## Los datos y el código para el análisis
 
 Los datos para el análisis se encuentran en una hoja de `googlesheets` a la que se puede acceder y modificar por su enlace por lo que, de momento se trabajará con una versión descargada del sitio.
 
 ```{r}
 library(readxl)
 #compTarifas <- read_excel("datos/Comparativa de tarifas entre unidades.xlsx")
-compTarifas <- read_excel("datos/Comparativa de tarifas entre unidades-20200710.xlsx")
-
+compTarifas <- read_excel("datos/Comparativa de tarifas entre unidades-20201008.xlsx")
 ```
 
+El código para el análisis se encuentra disponible en github en la dirección: [https://github.com/uebvhir/ComparacionTarifas](https://github.com/uebvhir/ComparacionTarifas)
+
+Se utilizan algunas librerías "internas" de la UEB en el VHIR (más que nada por pereza de no reescribir el código) pero los análisis se pueden realizar fácilmente con cuatro funciones básicas de R o python.
+
+# Lectura y preprocesado de los datos
 
 ```{r}
 library(anaStatsUEB)
@@ -59,7 +62,7 @@ compTarifas_short <- as.data.frame(select(compTarifas, ID_centro, LOC, Tipo, Tra
 desc_data(compTarifas_short)
 ```
 
-Recodificamos las variables carácter a factores
+Recodificamos algunas variables carácter como factores
 
 
 ```{r}
@@ -73,19 +76,11 @@ Limpiamos los datos para eliminar errores (e.g SI y Si como respuestas)
 compTarifas_short <- janitor::clean_names(compTarifas_short) 
 ```
 
-```{r eval=FALSE}
-compTarifas_short$cartera_servicios[ grep("SI|Si", compTarifas_short$cartera_servicios)] <- "Sí" 
-compTarifas_short$cartera_servicios<- factor_ueb(compTarifas_short$cartera_servicios) 
-compTarifas_short$trans_bio_net[ grep("SI|Si", compTarifas_short$trans_bio_net)] <- "Sí" 
-compTarifas_short$trans_bio_net<- factor_ueb(compTarifas_short$trans_bio_net) 
-```
-
-
 # Resumen de los datos
 
 ## Resumenes numericos
 
-Un rápido resumen de algunas de las variables:
+La tabla siguiente muestra un resumen de algunas de las variables:
 
 ```{r}
 library(anaStatsUEB)
