@@ -60,6 +60,10 @@ Nos quedamos con el subconjunto a analizar
 library(dplyr)
 compTarifas_short <- as.data.frame(select(compTarifas, ID_centro, LOC, Tipo, TransBioNet, Criterio, Pers., Interna, Publica, Privada))
 desc_data(compTarifas_short)
+compTarifas_short$Privada[compTarifas_short$Privada == "-"] <- NA
+compTarifas_short$Privada <- as.numeric(compTarifas_short$Privada)
+compTarifas_short$Interna <- as.numeric(compTarifas_short$Interna)
+compTarifas_short$Publica <- as.numeric(compTarifas_short$Publica)
 ```
 
 Recodificamos algunas variables carácter como factores
@@ -128,6 +132,7 @@ ggplot(na.omit(allTarifas), aes(x=Centro, y=Tarifa, fill=Tipo)) +
 ```{r}
 library("PerformanceAnalytics")
 compTarifas_num <- compTarifas_short[, c("interna", "publica", "privada")]
+
 chart.Correlation(compTarifas_num, histogram=TRUE, pch=19)
 ```
 
