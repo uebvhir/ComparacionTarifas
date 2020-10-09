@@ -74,7 +74,7 @@ require(car)
 require(tibble)
 unitSize <- recode(compTarifas_short$Pers., 
 "1='single'; c(2,3)='Small'; c(4,5)='Medium'; c(5,6,7,8,9,10)='Big'")
-compTarifas_short$unitSize=unitSize
+compTarifas_short$unitSize=factor(unitSize)
 ```
 
 
