@@ -73,7 +73,7 @@ compTarifas_short[,var2fac] <- lapply(compTarifas_short[,var2fac] , factor)
 require(car)
 require(tibble)
 unitSize <- recode(compTarifas_short$Pers., 
-"1='single'; c(2,3)='Small'; c(4,5)='Medium'; c(5,6,7,8,9,10)='Big'")
+"1='1-Ssingle'; c(2,3)='2-Small'; c(4,5)='3-Medium'; c(5,6,7,8,9,10)='4-Big'")
 compTarifas_short$unitSize=factor(unitSize)
 ```
 
@@ -102,7 +102,7 @@ dscgroup$results
 desc_plot(compTarifas_short[,!names(compTarifas_short) %in% "criterio"], las=2, cex.lab=0.7, rowcol=c(1,1))
 ```
 
-## Visualizando las tarifas
+# Comparación de tarifas
 
 ```{r eval=TRUE, fig.height = 7, fig.width = 9} 
 N=nrow(compTarifas_short)
@@ -117,37 +117,65 @@ allTarifas <- data.frame(Centro =rep(compTarifas_short$id_centro,3),
 )
 
 allTarifas$Tipo <- factor_ueb(allTarifas$Tipo,labs = c("INT","PUB","PRIV"))
+```
 
+## Tarifas por tipo de usuario
+
+```{r eval=TRUE, fig.height = 7, fig.width = 9} 
+ggplot(allTarifas, aes(x=Tipo, y= Tarifa, group=Tipo)) + 
+  geom_boxplot(aes(fill=Tipo)) + 
+  geom_jitter(shape=16, position=position_jitter(0.2))
+#  facet_grid(.~unit_size ) 
+
+# boxplot_bw(y = "Tarifa", group = "Tipo", dat = allTarifas)
+```
+
+
+## Tarifas por centro en que se aplican y tipo de usuario
+
+```{r eval=TRUE, fig.height = 7, fig.width = 9} 
+ggplot(na.omit(allTarifas), aes(x=Centro, y=Tarifa, fill=Tipo)) +
+    geom_bar(stat='identity', position='dodge') + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+
+## Tarifas por tipo de usuario y tamaño de la unidad
+
+```{r eval=TRUE, fig.height = 7, fig.width = 9} 
 ggplot(allTarifas, aes(x=Tipo, y= Tarifa, group=Tipo)) + 
   geom_boxplot(aes(fill=Tipo)) + 
   geom_jitter(shape=16, position=position_jitter(0.2))+ 
   facet_grid(.~unit_size ) 
 
-boxplot_bw(y = "Tarifa", group = "Tipo",dat = allTarifas)
+# boxplot_bw(y = "Tarifa", group = "Tipo",dat = allTarifas)
+```
 
+## Tarifas por tipo de usuario y tipología de la unidad
 
+_El gráfico no se ha podido visualizar al quedar demasiadas categorias vacías. Pendiente de recodificar._
 
+```{r eval=FALSE, fig.height = 7, fig.width = 9} 
+ggplot(allTarifas, aes(x=Tipo, y= Tarifa, group=Tipo)) + 
+  geom_boxplot(aes(fill=Tipo)) + 
+  geom_jitter(shape=16, position=position_jitter(0.2))+ 
+  facet_grid(.~tipo) 
 
+# boxplot_bw(y = "Tarifa", group = "Tipo",dat = allTarifas)
+```
 
+## Tarifas por centro en que se aplican
+
+```{r eval=TRUE, fig.height = 7, fig.width = 9} 
 ggplot(na.omit(allTarifas), aes(x=Centro, y=Tarifa, fill=Tipo)) +
     geom_bar(stat='identity', position='dodge') + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-
-
-
-# 
-# ggplot(allTarifas, aes(Tipo, Tarifa, group=Centro, color = Centro)) +
-#     geom_line() 
-
-
-
-
 ```
 
 
-## Correlaciones
+## Correlaciones entre las tarifas por tipos de usuarios
 
-```{r}
+Hay una relación clara entre las tarifas. AUnque podría parecer qu edeberían estar más relacionadas las tarifas interna y pública, en la práctica lo estan más la pública y la privada. 
+
+```{r , out.width = "66%"}
 library("PerformanceAnalytics")
 compTarifas_num <- compTarifas_short[, c("interna", "publica", "privada")]
 
