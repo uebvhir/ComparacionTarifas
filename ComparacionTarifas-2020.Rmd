@@ -8,7 +8,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, 
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning = FALSE, 
                       fig.width=3.7, fig.height=3.7)
 ```
 
@@ -27,11 +27,7 @@ Este documento presenta una primera aproximación a una comparación de tarifas 
 Esta comparativa se inició en Barcelona, en el Vall d'Hebrón Institut de Recerca (VHIR) y se ha ido extendiendo -bajo el impulso de TransBionet- a otros centros catalanes y españoles, lo que explica el reparto desigual entre comunidades. 
 La muestra de unidades no es aleatoria sino oportunista: se ha recogido los datos a los que se ha tenido acceso. Ahora bien, como el número total de unidades no es muy alto es probable que se pueda considerar relativamente representativa.
 
-En esta primera aproximación nos limitaremos a explorar la tabla de datos recogida con el objetivo de responder dos preguntas.
-
-- En base a qué criterios se facturan los servicios
-- Cuanto se cobra por los servicios de las unidades según si los clientes son "internos", "públicos" o "privados", clasificación adoptada por la mayoría de las unidades.
-
+En esta primera aproximación nos limitaremos a explorar la tabla de datos recogida con el objetivo de mostrar como se distribuyen las tarifas según el tipo de cliente o la tipología de la unidad. Los clientes se clasifican como "internos", "públicos" o "privados" en la mayoría de unidades, por lo que se ha adoptado esta denominación
 
 ## Los datos y el código para el análisis
 
@@ -47,14 +43,16 @@ El código para el análisis se encuentra disponible en github en la dirección:
 
 Se utilizan algunas librerías "internas" de la UEB en el VHIR (más que nada por pereza de no reescribir el código) pero los análisis se pueden realizar fácilmente con cuatro funciones básicas de R o python.
 
-# Lectura y preprocesado de los datos
+
+## Lectura y recodificación de los datos
+
+Previo al análisis se han recodificado algunos datos (por ejemplo pasar a factores algunas variables carácter, y recodificar la variable "Pers") y hecho algo de limpieza para evitar categorias erroneamente distintas (unificar los valores SI y Si como respuestas)
+)
 
 ```{r}
 library(anaStatsUEB)
 library(mmotaF)
 ```
-
-Nos quedamos con el subconjunto a analizar
 
 ```{r}
 library(dplyr)
@@ -66,34 +64,38 @@ compTarifas_short$Interna <- as.numeric(compTarifas_short$Interna)
 compTarifas_short$Publica <- as.numeric(compTarifas_short$Publica)
 ```
 
-Recodificamos algunas variables carácter como factores
-
-
 ```{r}
 var2fac <- names(which(sapply(compTarifas_short, is.character))) [-1]
 compTarifas_short[,var2fac] <- lapply(compTarifas_short[,var2fac] , factor) 
 ```
 
-Limpiamos los datos para eliminar errores (e.g SI y Si como respuestas)
+```{r}
+require(car)
+require(tibble)
+unitSize <- recode(compTarifas_short$Pers., 
+"1='single'; c(2,3)='Small'; c(4,5)='Medium'; c(5,6,7,8,9,10)='Big'")
+compTarifas_short$unitSize=unitSize
+```
 
 ```{r}
 compTarifas_short <- janitor::clean_names(compTarifas_short) 
+
 ```
 
 # Resumen de los datos
 
 ## Resumenes numericos
 
-La tabla siguiente muestra un resumen de algunas de las variables:
+La tabla siguiente resumen algunas de las variables recogidas. Aunque parece claro que puede interesar comparar como se distribuyen las tarifas por comunidades, tipología de centros o tipos de unidades, esta información no parece disponible o bien representada salvo para el tipo de unidad.
 
 ```{r}
-library(anaStatsUEB)
-library(mmotaF)
+require(anaStatsUEB)
+require(mmotaF)
 dscgroup<- desc_group (covariates = names(compTarifas_short), data = compTarifas_short)
 dscgroup$results
 ```
 
-## Visualizaciones gráficas sencillas
+## Visualización de las variables
 
 ```{r}
 desc_plot(compTarifas_short[,!names(compTarifas_short) %in% "criterio"], las=2, cex.lab=0.7, rowcol=c(1,1))
