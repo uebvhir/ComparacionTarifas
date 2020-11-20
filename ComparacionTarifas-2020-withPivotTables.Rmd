@@ -1,7 +1,7 @@
 ---
 title: "Comparacion de Tarifas de Unidades de Bioinformatica/Bioestadistica"
 author: "Alex Sanchez y Miriam Mota"
-date: "Unitat d'Estadística i Bioinformàtica. Vall d'Hebron Institut de Recerca"
+date: ""
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -18,6 +18,9 @@ library(devtools)
 if (!require(anaStatsUEB)) install_github("uebvhir/anaStatsUEB")
 if (!require(mmotaF))install_github("miriammota/mmotaF")
 if (!require(PerformanceAnalytics)) install.packages("PerformanceAnalytics")
+if (!require("ramnathv/htmlwidgets")) install_github("ramnathv/htmlwidgets") 
+if (!require("smartinsightsfromdata/rpivotTable")) install_github("smartinsightsfromdata/rpivotTable")
+## Load rpivotTable
 ```
 
 # Introducción
@@ -41,7 +44,7 @@ compTarifas <- read_excel("datos/Comparativa de tarifas entre unidades-20201008_
 
 El código para el análisis se encuentra disponible en github en la dirección: [https://github.com/uebvhir/ComparacionTarifas](https://github.com/uebvhir/ComparacionTarifas)
 
-Se utilizan algunas librerías "internas" de la UEB en el VHIR pero los análisis se pueden realizar fácilmente con cuatro funciones básicas de R o python.
+Se utilizan algunas librerías "internas" de la UEB en el VHIR (más que nada por pereza de no reescribir el código) pero los análisis se pueden realizar fácilmente con cuatro funciones básicas de R o python.
 
 
 ## Lectura y recodificación de los datos
@@ -72,30 +75,17 @@ compTarifas_short[,var2fac] <- lapply(compTarifas_short[,var2fac] , factor)
 ```{r}
 require(car)
 require(tibble)
-unitSize <- recode(compTarifas_short$Pers., 
-"1='1-Ssingle'; c(2,3)='2-Small'; c(4,5)='3-Medium'; c(5,6,7,8,9,10)='4-Big'")
-compTarifas_short$unitSize=factor(unitSize)
+unitSize <- as.factor(recode(compTarifas_short$Pers., 
+"1='single'; c(2,3)='Small'; c(4,5)='Medium'; c(6,7,8,9,10)='Big'"))
+compTarifas_short$unitSize=unitSize
+compTarifas_short<- add_column(compTarifas_short, unitSize2=unitSize, .before="Pers.")
 ```
-
 
 ```{r}
 compTarifas_short <- janitor::clean_names(compTarifas_short) 
-oldNames <- colnames(compTarifas_short)
-# newNames<- colnames(compTarifas_short)<- c("id_centro", "CCAA", "Actividad", "En_TransBioNet", "comoFactura", "Personal", "Tarifa_Interna", "Tarifa_Publica", "Tarifa_Privada", "unit_size")
 ```
 
 # Resumen de los datos
-
-## Centros cuyas unidades se han incluído en el estudio
-
-```{r}
-library(kableExtra)
-dt <-data.frame(ID = compTarifas$ID_centro, CENTRO = compTarifas$CENTRO)
-# kbl(dt)
-dt %>%
-  kbl() %>%
-  kable_styling()
-```
 
 ## Resumenes numericos
 
@@ -111,17 +101,14 @@ dscgroup$results
 ## Visualización de las variables
 
 ```{r}
-desc_plot(compTarifas_short[,!names(compTarifas_short) %in% "comoFactura"], las=2, cex.lab=0.7, rowcol=c(1,1))
+desc_plot(compTarifas_short[,!names(compTarifas_short) %in% "criterio"], las=2, cex.lab=0.7, rowcol=c(1,1))
 ```
 
-# Comparación de tarifas
+## Visualizando las tarifas
 
 ```{r eval=TRUE, fig.height = 7, fig.width = 9} 
 N=nrow(compTarifas_short)
-
-
 allTarifas <- data.frame(Centro =rep(compTarifas_short$id_centro,3), 
-                         unit_size =rep(compTarifas_short$unit_size,3),
                            Tarifa = c(compTarifas_short$interna, 
                                   compTarifas_short$publica,
                                   compTarifas_short$privada),
@@ -129,56 +116,37 @@ allTarifas <- data.frame(Centro =rep(compTarifas_short$id_centro,3),
 )
 
 allTarifas$Tipo <- factor_ueb(allTarifas$Tipo,labs = c("INT","PUB","PRIV"))
-```
 
-## Tarifas por tipo de usuario
-
-```{r eval=TRUE, fig.height = 7, fig.width = 9} 
-ggplot(allTarifas, aes(x=Tipo, y= Tarifa, group=Tipo)) + 
-  geom_boxplot(aes(fill=Tipo)) + 
-  geom_jitter(shape=16, position=position_jitter(0.2))
-#  facet_grid(.~unit_size ) 
-
-# boxplot_bw(y = "Tarifa", group = "Tipo", dat = allTarifas)
-```
+boxplot_bw(y = "Tarifa", group = "Tipo",dat = allTarifas)
 
 
-## Tarifas por centro en que se aplican y tipo de usuario
-
-```{r eval=TRUE, fig.height = 7, fig.width = 9} 
 ggplot(na.omit(allTarifas), aes(x=Centro, y=Tarifa, fill=Tipo)) +
     geom_bar(stat='identity', position='dodge') + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+# 
+# ggplot(allTarifas, aes(Tipo, Tarifa, group=Centro, color = Centro)) +
+#     geom_line() 
+
+```
+
+## Tablas cruzadas interactivas
+
+El análisis anterior puede realizarse estratificando por alguna categoría interesante como "tipo" o "tamaño" de la unidad:
+
+```{r}
+
+library(rpivotTable)
+data(mtcars)
+## One line to create pivot table
+rpivotTable(mtcars, rows="gear", col="cyl", aggregatorName="Average", 
+vals="mpg", rendererName="Treemap")
 ```
 
 
-## Tarifas por tipo de usuario y tamaño de la unidad
+## Correlaciones
 
-```{r eval=TRUE, fig.height = 7, fig.width = 9} 
-ggplot(allTarifas, aes(x=Tipo, y= Tarifa, group=Tipo)) + 
-  geom_boxplot(aes(fill=Tipo)) + 
-  geom_jitter(shape=16, position=position_jitter(0.2))+ 
-  facet_grid(.~unit_size ) 
-# boxplot_bw(y = "Tarifa", group = "Tipo",dat = allTarifas)
-```
-<!-- ## Tarifas por tipo de usuario y tipología de la unidad -->
-
-<!-- _El gráfico no se ha podido visualizar al quedar demasiadas categorias vacías. Pendiente de recodificar._ -->
-
-<!-- ```{r, fig.height = 7, fig.width = 9}  -->
-<!-- ggplot(allTarifas, aes(x=Tipo, y= Tarifa, group=Tipo)) +  -->
-<!--   geom_boxplot(aes(fill=Tipo)) +  -->
-<!--   geom_jitter(shape=16, position=position_jitter(0.2))+  -->
-<!--   facet_grid(.~tipo)  -->
-
-<!-- # boxplot_bw(y = "Tarifa", group = "Tipo",dat = allTarifas) -->
-<!-- ``` -->
-
-
-## Correlaciones entre las tarifas por tipos de usuarios
-
-Hay una relación clara entre las tarifas. AUnque podría parecer que deberían estar más relacionadas las tarifas interna y pública, en la práctica lo estan más la pública y la privada. 
-
-```{r , out.width = "66%"}
+```{r, fig.width=15cm}
 library("PerformanceAnalytics")
 compTarifas_num <- compTarifas_short[, c("interna", "publica", "privada")]
 
